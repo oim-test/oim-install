@@ -1,0 +1,21 @@
+---
+- hosts: localhost
+  become: true
+  become_method: su
+  become_user: root
+  tasks: 
+    - name: Install Required Packages
+      script: ../scripts/preq.sh
+    - name: Create Swap Memory
+      shell: "dd if=/dev/zero of=/swapfile bs=16384 count=1048576"
+      ignore_errors: true
+    - name: Change Mode of Swap File
+      shell: chmod 600 /swapfile
+      ignore_errors: true
+    - name: Enable Swap File
+      shell: mkswap /swapfile
+      ignore_errors: true
+    - name: Verify Swap
+      shell: swapon /swapfile
+      ignore_errors: true
+      

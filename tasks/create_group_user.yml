@@ -1,0 +1,62 @@
+---
+- hosts: localhost
+  become: true
+  become_method: su
+  become_user: root
+  tasks: 
+    - name: Fetch Groups and Users from Vars
+      include_vars:  
+        file: ../vars/main.yml
+        name: main
+    - name: Create groups
+      group:
+        name: "{{ item }}"
+        state: present
+      with_items: "{{ main['group'] }}"
+    - name: Create user and assign to groups
+      user:
+        name: "{{ item }}"
+        shell: /bin/bash
+        groups: "{{ main['group'] }}"
+        append: yes
+      with_items: "{{ main['user'] }}"
+    - name: Create Folders
+      file:
+        path: "{{ item }}"
+        owner: "{{ main['user'] }}"
+        group: "{{ main['group'][0] }}"
+        mode: 0755
+        state: directory
+      with_items: "{{ main['folders'] }}"
+    - name: Write to /etc/sysctl file
+      lineinfile:
+        path: /etc/sysctl.conf
+        line: "{{ item }}"
+      with_items: "{{ main['sysctl'] }}"  
+    - name: Print Config file
+      shell: sysctl -p
+    - name: Update Config file
+      shell: sysctl -a
+    - name: Write to /etc/security/limits.conf file
+      lineinfile:
+        path: /etc/security/limits.conf
+        line: "{{ item }}"
+      with_items: "{{ main['limit'] }}"  
+    - name: Copy file with owner and permissions
+      copy:
+        src: ../files/"{{ main['db_name'] }}"
+        dest: /u01/software/
+        mode: '0755'
+    - name: Give persmission to oracle
+      shell: chown -R oracle:oinstall /u01
+      ignore_errors: true
+    - name: Change password authentication mode
+      shell: sed -i "s/#PasswordAuthentication yes/PasswordAuthentication yes/g" /etc/ssh/sshd_config
+      ignore_errors: true
+    - name: Change password authentication mode
+      shell: sed -i "s/PasswordAuthentication no/#PasswordAuthentication no/g" /etc/ssh/sshd_config
+      ignore_errors: true
+    - name: Restart sshd service
+      service:
+        name: sshd
+        state: restarted
