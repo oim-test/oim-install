@@ -1,4 +1,6 @@
 ---
 - import_playbook: install_pre_requisites.yml
 - import_playbook: create_group_user.yml
-
+- import_playbook: run_installer.yml
+- import_playbook: post_installer.yml
+- import_playbook: create_database.yml

@@ -1,0 +1,38 @@
+---
+- hosts: localhost
+  become: true
+  become_method: su
+  become_user: root
+  gather_facts: false
+  tasks: 
+    - name: Fetch Groups and Users from Vars
+      include_vars:  
+        file: ../vars/main.yml
+        name: main
+    - name: Create Folders
+      file:
+        path: "{{ item }}"
+        owner: "{{ main['user'] }}"
+        group: "{{ main['group'][0] }}"
+        mode: 0755
+        state: directory
+      with_items: "{{ main['oim_folders'] }}"
+    - name: Copy file with owner and permissions
+      unarchive:
+        src: ../files/{{ item }}.zip
+        dest: /u02/software
+        remote_src: yes
+      with_items: 
+        - "{{ main['files'][1] }}"
+        - "{{ main['files'][2] }}"
+    - name: Restart sshd service
+      service:
+        name: sshd
+        state: restarted
+    - name: Stop firewall
+      service:
+        name: firewalld
+        state: stopped
+    - name: Stop firewall
+      shell: chkconfig firewalld off
+      ignore_errors: true

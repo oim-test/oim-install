@@ -1,0 +1,30 @@
+---
+- hosts: localhost
+  become_user: root/oracle
+  gather_facts: false
+  tasks:
+    - name: Run netca script in silent mode
+      shell: /u01/software/bin/netca -silent -responsefile $ORACLE_HOME/assistants/netca/netca.rsp -lisport 1531
+      become: true
+      become_method: su
+      become_user: oracle
+      become_flags: '-s /bin/sh'
+    - name: Replace response file
+      file:
+        path: $ORACLE_HOME/assistants/dbca/dbca.rsp
+        state: absent
+    - name: Replace response file
+      copy:
+        src: ../files/dbca.rsp
+        dest: $ORACLE_HOME/assistants/dbca/dbca.rsp
+        owner: oracle
+        group: oinstall
+        mode: 0755    
+    - name: Create database as oracle in silent mode
+      shell: /u01/software/bin/dbca -silent -createDatabase -responseFile /u01/software/assistants/dbca/dbca.rsp
+      become: true
+      become_method: su
+      become_flags: '-s /bin/sh'
+      become_user: oracle
+    
+      

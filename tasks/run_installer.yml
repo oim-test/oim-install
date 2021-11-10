@@ -1,0 +1,32 @@
+---
+- hosts: localhost
+  become: true
+  become_method: su
+  gather_facts: false
+  tasks:
+    - name: change script ownership
+      shell: chown -R oracle:oinstall ../scripts/run_installer.sh
+    - name: Check pre requisities
+      shell: sh $ORACLE_HOME/runInstaller -executePrereqs -silent
+      become: true
+      become_method: su
+      become_user: oracle
+      become_flags: '-s /bin/sh'
+    - name: Replace response file
+      file:
+        path: $ORACLE_HOME/install/response/db_install.rsp
+        state: absent
+    - name: Replace response file
+      copy:
+        src: ../files/db_install.rsp
+        dest: $ORACLE_HOME/install/response/db_install.rsp
+        owner: oracle
+        group: oinstall
+        mode: 0755    
+    - name: Run Installer
+      shell: sh $ORACLE_HOME/runInstaller -silent -responseFile $ORACLE_HOME/install/response/db_install.rsp
+      become: true
+      become_method: su
+      become_user: oracle
+      become_flags: '-s /bin/sh'
+

@@ -1,0 +1,11 @@
+---
+- hosts: localhost
+  become: true
+  become_method: su
+  become_user: root
+  gather_facts: false
+  tasks: 
+    - name: Run orainstRoot script as root
+      script: /u01/app/oraInventory/orainstRoot.sh
+    - name: Run root script as root
+      script: /u01/software/root.sh
